@@ -14,11 +14,33 @@ public class DetectionEngine {
     private static final Pattern EMAIL_PATTERN =
         Pattern.compile("[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}");
 
+    // Phone: 10-15 digits, with optional +, spaces, dashes, dots, parens.
+    // Uses negative lookbehind/ahead to avoid matching inside timestamps (YYYY-MM-DD, HH:MM:SS)
+    // and log date patterns like 2026-03-25T09:21:41 or .278+05:30
     private static final Pattern PHONE_PATTERN =
-        Pattern.compile("(?:\\+?\\d[\\s\\-.]?){9,14}\\d");
+        Pattern.compile(
+            "(?<![:\\dT])"                          // not preceded by ':', digit, or 'T' (timestamp context)
+            + "(?:\\+?(?:1|\\d{1,3})[\\s\\-.]?)?"  // optional country code
+            + "(?:\\(?\\d{2,4}\\)?[\\s\\-.]?)"     // area/city code
+            + "(?:\\d{3,4}[\\s\\-.]?)"             // exchange
+            + "(?:\\d{4})"                           // subscriber
+            + "(?![:\\d])"                           // not followed by ':' or digit (timestamp context)
+        );
 
+    // API Key: matches named keys (any prefix ending in _KEY, _TOKEN, _SECRET, _API) OR
+    // well-known bare vendor prefixes (sk-, pk-, rk-, ghp_, xox, AKIA, etc.)
     private static final Pattern API_KEY_PATTERN =
-        Pattern.compile("(?i)(?:api[_\\-]?key|sk|pk|token)[\\s:=]+['\"]?([A-Za-z0-9\\-._~+/]{16,})['\"]?");
+        Pattern.compile(
+            "(?i)(?:"
+            // Named key assignments: OPENAI_API_KEY=..., X-API-KEY: ..., apiKey = '...'
+            + "(?:[A-Za-z0-9_\\-]*(?:api[_\\-]?key|api[_\\-]?token|api[_\\-]?secret|access[_\\-]?key|auth[_\\-]?key))[\\s:=]+['\"]?([A-Za-z0-9\\-._~+/]{16,})['\"]?"
+            // Bare vendor prefixes: sk-..., pk-..., rk-..., ghp_..., ghs_..., xoxb-..., AKIA...
+            + "|\\b(sk|pk|rk)-[A-Za-z0-9\\-]{20,}\\b"
+            + "|\\b(ghp|ghs|gho|ghu|ghr)_[A-Za-z0-9]{36}\\b"
+            + "|\\b(xoxb|xoxa|xoxp)-[A-Za-z0-9\\-]{10,}\\b"
+            + "|\\bAKIA[A-Z0-9]{16}\\b"
+            + ")"  
+        );
 
     private static final Pattern PASSWORD_PATTERN =
         Pattern.compile("(?i)(?:password|passwd|pwd|pass)\\s*[=:]\\s*['\"]?([^'\"\\s]{4,})['\"]?");
@@ -117,17 +139,23 @@ public class DetectionEngine {
         return findings;
     }
 
-    // Helper: add all regex matches as Findings
+    // Helper: add all regex matches as Findings.
+    // Extracts the first non-null capture group as the value (handles multi-group alternation patterns).
+    // Falls back to the full match if no capture groups are present/non-null.
 
     private void addMatches(String line, int lineNum, Pattern pattern,
                              String type, String risk, String description,
                              List<Finding> findings) {
         Matcher m = pattern.matcher(line);
         while (m.find()) {
-            // Use capture group 1 if available (e.g. password value only), else full match
-            String value = m.groupCount() >= 1 && m.group(1) != null
-                    ? m.group(1)
-                    : m.group();
+            // Find first non-null capture group (supports multi-group alternation patterns like API keys)
+            String value = m.group(); // default: full match
+            for (int g = 1; g <= m.groupCount(); g++) {
+                if (m.group(g) != null) {
+                    value = m.group(g);
+                    break;
+                }
+            }
 
             findings.add(Finding.builder()
                     .type(type)
