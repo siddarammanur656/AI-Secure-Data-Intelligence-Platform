@@ -272,7 +272,7 @@ curl http://localhost:8080/history
 | | Link |
 |---|---|
 | 🌍 **Live Application** | [securexai.netlify.app](https://securexai.netlify.app) |
-| 📹 **Demo Video** | *[Link to be added]* |
+| 📹 **Demo Video** | [Click](https://drive.google.com/drive/folders/1pxOoy5QCfbVO7VF2ePvelSaZu_DjaxKr?usp=sharing) |
 
 **Try these test inputs on the live site:**
 ```
