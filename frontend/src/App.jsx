@@ -47,16 +47,15 @@ function App() {
         </button>
       </div>
 
-      {/* Mobile overlay backdrop */}
-      {sidebarOpen && (
-        <div
-          className="mobile-overlay"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Main app layout */}
+      {/* Mobile overlay backdrop — must be INSIDE app-container to share stacking context with sidebar-wrapper */}
       <div className="app-container">
+        {sidebarOpen && (
+          <div
+            className="mobile-overlay"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* Sidebar — desktop: always visible | mobile: slide-in drawer */}
         <div className={`sidebar-wrapper ${sidebarOpen ? 'sidebar-open' : ''}`}>
           <div className="sidebar-close-btn d-flex justify-content-end px-2 pt-2">
