@@ -67,11 +67,26 @@ const ScanInput = ({ onAnalyze, isScanning }) => {
         {activeTab === 'text' && (
           <div className="textarea-wrapper">
             <textarea 
-              className="form-control bg-dark bg-opacity-50 text-white border-secondary border-opacity-50 rounded-3 p-3 shadow-inner resize-none font-monospace"
-              style={{ minHeight: '180px' }}
+              style={{ 
+                width: '100%',
+                minHeight: '180px',
+                backgroundColor: 'rgba(0, 0, 0, 0.45)',
+                color: '#f1f5f9',
+                caretColor: '#f1f5f9',
+                border: '1px solid rgba(255,255,255,0.15)',
+                borderRadius: '12px',
+                padding: '14px 16px',
+                fontFamily: '"DM Mono", monospace',
+                fontSize: '13px',
+                lineHeight: '1.65',
+                resize: 'vertical',
+                outline: 'none'
+              }}
               placeholder="Paste your text, logs, or chat messages here for analysis...&#10;&#10;Example:&#10;api_key = sk-abc123xyz789&#10;password=MySecret123"
               value={textContent}
               onChange={(e) => setTextContent(e.target.value)}
+              onFocus={e => e.target.style.borderColor = 'rgba(167,139,250,0.6)'}
+              onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.15)'}
             />
             <div className="d-flex justify-content-between mt-2 text-secondary fs-7">
               <span>{textContent.length} characters</span>
@@ -86,13 +101,29 @@ const ScanInput = ({ onAnalyze, isScanning }) => {
               <Database size={14} className="me-2" /> SQL Query / Snippet
             </div>
             <textarea 
-              className="form-control bg-dark text-warning border-warning border-opacity-50 rounded-3 p-3 font-monospace shadow-inner mb-2"
-              style={{ minHeight: '180px' }}
+              style={{ 
+                width: '100%',
+                minHeight: '180px',
+                backgroundColor: 'rgba(0, 0, 0, 0.55)',
+                color: '#fde68a',
+                caretColor: '#fde68a',
+                border: '1px solid rgba(253, 224, 71, 0.4)',
+                borderRadius: '12px',
+                padding: '14px 16px',
+                fontFamily: '"DM Mono", monospace',
+                fontSize: '13px',
+                lineHeight: '1.65',
+                resize: 'vertical',
+                outline: 'none',
+                marginBottom: '8px'
+              }}
               placeholder="SELECT * FROM users WHERE id=1 OR '1'='1'&#10;UNION SELECT username, password FROM admin--"
               value={sqlContent}
               onChange={(e) => setSqlContent(e.target.value)}
+              onFocus={e => e.target.style.borderColor = 'rgba(253,224,71,0.75)'}
+              onBlur={e => e.target.style.borderColor = 'rgba(253,224,71,0.4)'}
             />
-            <div className="text-muted fs-7">💡 Detects SQL injection, dangerous queries, and data exposure</div>
+            <div style={{ color: '#a3a3a3', fontSize: '12px' }}>💡 Detects SQL injection, dangerous queries, and data exposure</div>
           </div>
         )}
 
