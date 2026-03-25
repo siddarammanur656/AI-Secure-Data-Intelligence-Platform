@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+        PARENT: Spring Boot handles all library version numbers for us.
+        We say "spring-boot-starter-parent" so we don't have to worry
+        about which version of each library works with which other version.
+        Spring Boot picks versions that are known to work together.
+    -->
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.4</version>
+        <relativePath/>
+    </parent>
+
+    <!--
+        PROJECT IDENTITY
+        groupId   = your company/package name (like a reverse domain)
+        artifactId = your project name
+        version   = 0.0.1-SNAPSHOT means "work in progress"
+    -->
+    <groupId>com.secureai</groupId>
+    <artifactId>AI_Secure_Data_Intelligence_Platform</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>AI Secure Data Intelligence Platform</name>
+    <description>AI-powered security scanner for sensitive data detection</description>
+
+    <properties>
+        <!-- We are using Java 17 -->
+        <java.version>17</java.version>
+    </properties>
+
+    <!--
+        DEPENDENCIES = the libraries our project needs.
+        Think of each <dependency> block as one item on the shopping list.
+        Maven will download these automatically.
+    -->
+    <dependencies>
+
+        <!--
+            1. SPRING WEB
+            This gives us the ability to create REST APIs.
+            Without this, we cannot handle HTTP requests like POST /analyze.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!--
+            2. SPRING DATA MONGODB
+            This lets our Java code talk to MongoDB Atlas.
+            It handles connecting, saving, fetching documents automatically.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
+
+        <!--
+            3. APACHE TIKA
+            This is the library that reads PDF, DOC, and TXT files
+            and converts them to plain text.
+            Without Tika, we cannot read uploaded files.
+        -->
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+            <version>2.9.1</version>
+        </dependency>
+
+        <!--
+            4. APACHE TIKA PARSERS (full)
+            This adds support for PDF, Microsoft Word (DOC/DOCX),
+            and many other file formats on top of Tika Core.
+        -->
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-parsers-standard-package</artifactId>
+            <version>2.9.1</version>
+        </dependency>
+
+        <!--
+            5. LOMBOK
+            This is a code shortcut library.
+            Instead of writing 50 lines of getters/setters/constructors,
+            we write one annotation like @Data and Lombok generates it.
+            Makes code much cleaner and beginner-friendly.
+        -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.34</version>
+            <optional>true</optional>
+        </dependency>
+
+        <!--
+            6. SPRING BOOT TEST
+            This allows us to write and run tests.
+            The "test" scope means it's only used during testing,
+            not when the app runs in production.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!--
+            7. JACKSON DATABIND
+            This converts Java objects to JSON and back.
+            For example: our AnalysisResult object becomes the JSON
+            response that the frontend receives.
+            Spring Boot includes this automatically, but we list it
+            explicitly so it's clear we depend on it.
+        -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
+        <!--
+            8. COMMONS IO
+            Provides helpful file reading utilities.
+            Makes reading files from disk much simpler.
+        -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.15.1</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!--
+                SPRING BOOT MAVEN PLUGIN
+                This lets us run the app with a single command
+                and package it into a single .jar file for deployment.
+            -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- Exclude Lombok from the final packaged app
+                         because it's only needed during compilation -->
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

@@ -1,0 +1,369 @@
+/* ═══════════════════════════════════════════════════════════
+   AI SECURE DATA INTELLIGENCE PLATFORM — app.js
+   Full frontend logic: SQL, file upload, highlighting, history
+═══════════════════════════════════════════════════════════ */
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    //  DOM References 
+    const navScanner = document.getElementById('nav-scanner');
+    const navHistory = document.getElementById('nav-history');
+    const scanView = document.getElementById('scan-view');
+    const historyView = document.getElementById('history-view');
+
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const inputTextArea = document.getElementById('input-text-area');
+    const inputSqlArea = document.getElementById('input-sql-area');
+    const inputFileArea = document.getElementById('input-file-area');
+
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('fileInput');
+    const fileDisplay = document.getElementById('file-name-display');
+    const textContent = document.getElementById('textContent');
+    const sqlContent = document.getElementById('sqlContent');
+
+    const optMask = document.getElementById('opt-mask');
+    const optBlock = document.getElementById('opt-block');
+    const optLog = document.getElementById('opt-log');
+
+    const btnAnalyze = document.getElementById('btn-analyze');
+    const btnText = document.getElementById('btn-text');
+    const loader = document.getElementById('loader');
+    const resultsArea = document.getElementById('results-area');
+    const charCount = document.getElementById('char-count');
+
+    let currentInputType = 'text';
+    let uploadedFile = null;
+
+    // Navigation 
+    navScanner.addEventListener('click', e => {
+        e.preventDefault();
+        navScanner.classList.add('active');
+        navHistory.classList.remove('active');
+        scanView.classList.remove('hidden');
+        historyView.classList.add('hidden');
+    });
+
+    navHistory.addEventListener('click', e => {
+        e.preventDefault();
+        navHistory.classList.add('active');
+        navScanner.classList.remove('active');
+        historyView.classList.remove('hidden');
+        scanView.classList.add('hidden');
+        loadHistory();
+    });
+
+    // Tabs 
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentInputType = btn.dataset.type;
+
+            inputTextArea.classList.remove('active');
+            inputSqlArea.classList.remove('active');
+            inputFileArea.classList.remove('active');
+
+            if (currentInputType === 'file') {
+                inputFileArea.classList.add('active');
+            } else if (currentInputType === 'sql') {
+                inputSqlArea.classList.add('active');
+            } else {
+                inputTextArea.classList.add('active');
+            }
+        });
+    });
+
+    //  Character Counter 
+    textContent.addEventListener('input', () => {
+        const len = textContent.value.length;
+        charCount.textContent = len.toLocaleString() + ' characters';
+    });
+
+    //  Clear Input 
+    window.clearInput = function () {
+        textContent.value = '';
+        charCount.textContent = '0 characters';
+    };
+
+    //  Drag and Drop 
+    dropZone.addEventListener('dragover', e => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        if (e.dataTransfer.files.length > 0) handleFileSelect(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', e => {
+        if (e.target.files.length > 0) handleFileSelect(e.target.files[0]);
+    });
+
+    function handleFileSelect(file) {
+        uploadedFile = file;
+        fileDisplay.textContent = `📎 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+        fileDisplay.classList.remove('hidden');
+        if (file.name.endsWith('.log')) optLog.checked = true;
+    }
+
+    //  Analyze 
+    btnAnalyze.addEventListener('click', async () => {
+
+        if (currentInputType === 'file') {
+            if (!uploadedFile) { showError('Please select a file first.'); return; }
+        } else {
+            const content = currentInputType === 'sql'
+                ? sqlContent.value.trim() : textContent.value.trim();
+            if (!content) { showError('Please enter some content to analyze.'); return; }
+        }
+
+        setLoading(true);
+        resultsArea.classList.add('hidden');
+
+        try {
+            let response;
+
+            if (currentInputType === 'file') {
+                const formData = new FormData();
+                formData.append('file', uploadedFile);
+                formData.append('mask', optMask.checked);
+                formData.append('block_high_risk', optBlock.checked);
+
+                response = await fetch('/upload', { method: 'POST', body: formData });
+
+            } else {
+                const content = currentInputType === 'sql'
+                    ? sqlContent.value : textContent.value;
+
+                const payload = {
+                    input_type: currentInputType,
+                    content: content,
+                    options: {
+                        mask: optMask.checked,
+                        block_high_risk: optBlock.checked,
+                        log_analysis: optLog.checked
+                    }
+                };
+
+                response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            }
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(errText || 'Server error');
+            }
+
+            const data = await response.json();
+            renderResults(data);
+
+        } catch (err) {
+            showError('Analysis failed: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
+    });
+
+    //  Render Results 
+    function renderResults(data) {
+        resultsArea.classList.remove('hidden');
+
+        const level = (data.risk_level || 'low').toLowerCase();
+        const action = (data.action || 'allowed').toLowerCase();
+        const score = data.risk_score || 0;
+        const findings = data.findings || [];
+
+        // Risk Banner
+        const banner = document.getElementById('risk-banner');
+        banner.style.borderColor = getRiskColor(level, 0.40);
+
+        document.getElementById('risk-icon').textContent = getRiskIcon(level, action);
+        document.getElementById('risk-title').textContent = getRiskTitle(level, action);
+        document.getElementById('res-summary').textContent = data.summary || '—';
+        document.getElementById('res-score').textContent = score;
+        document.getElementById('res-score').style.color = getRiskColor(level, 1);
+
+        const badgeLevel = document.getElementById('badge-level');
+        badgeLevel.textContent = level.toUpperCase();
+        badgeLevel.className = 'rbadge ' + level;
+
+        const badgeAction = document.getElementById('badge-action');
+        badgeAction.textContent = action.toUpperCase();
+        badgeAction.className = 'rbadge ' + action;
+
+        // Insights
+        const ul = document.getElementById('res-insights');
+        ul.innerHTML = '';
+        if (data.insights && data.insights.length > 0) {
+            data.insights.forEach(ins => {
+                const li = document.createElement('li');
+                li.textContent = ins;
+                li.className = getInsightClass(ins);
+                ul.appendChild(li);
+            });
+        } else {
+            ul.innerHTML = '<li class="insight-empty">No specific insights generated.</li>';
+        }
+
+        // Findings Table
+        const tbody = document.getElementById('res-findings');
+        const countEl = document.getElementById('findings-count');
+        tbody.innerHTML = '';
+        countEl.textContent = findings.length + ' found';
+
+        if (findings.length > 0) {
+            findings.forEach(f => {
+                const tr = document.createElement('tr');
+                const typeClass = isSqlType(f.type) ? 'sql' : isDangerType(f.type) ? 'danger' : '';
+                tr.innerHTML = `
+                    <td style="font-family:'DM Mono',monospace;color:var(--text-muted);font-size:12px">${f.line > 0 ? f.line : '—'}</td>
+                    <td><span class="type-chip ${typeClass}">${f.type}</span></td>
+                    <td><span class="badge ${f.risk}">${f.risk}</span></td>
+                    <td style="font-size:12px;color:var(--text-muted)">${escHtml(f.description)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="4" class="empty-row">✅ No security issues found.</td></tr>';
+        }
+
+        // Content Viewer with line highlighting
+        const contentEl = document.getElementById('res-content');
+        const ctBadge = document.getElementById('content-type-badge');
+        ctBadge.textContent = data.content_type || data.input_type || 'text';
+
+        if (data.processed_content) {
+            contentEl.innerHTML = buildHighlightedContent(data.processed_content, findings);
+        } else {
+            contentEl.textContent = action === 'blocked'
+                ? '🚫 Content blocked due to critical/high risk findings.'
+                : 'No content available.';
+        }
+    }
+
+    //  Build highlighted content view 
+    function buildHighlightedContent(content, findings) {
+        const lineRisk = {};
+        findings.forEach(f => {
+            if (f.line > 0) {
+                const current = lineRisk[f.line];
+                if (!current || riskRank(f.risk) > riskRank(current)) {
+                    lineRisk[f.line] = f.risk;
+                }
+            }
+        });
+
+        const lines = content.split('\n');
+        return lines.map((line, i) => {
+            const lineNum = i + 1;
+            const risk = lineRisk[lineNum];
+            const numSpan = `<span style="color:var(--text-dim);user-select:none;margin-right:14px;font-size:11px">${String(lineNum).padStart(3, ' ')}</span>`;
+            const safeL = escHtml(line);
+            if (risk) {
+                return `<span class="hl-${risk}">${numSpan}${safeL}</span>`;
+            }
+            return `<span>${numSpan}${safeL}</span>`;
+        }).join('\n');
+    }
+
+    //  History 
+    window.loadHistory = async function () {
+        const tbody = document.getElementById('history-tbody');
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-row">Loading...</td></tr>';
+        try {
+            const res = await fetch('/history');
+            const data = await res.json();
+
+            tbody.innerHTML = '';
+            if (!data.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="empty-row">No scan history found.</td></tr>';
+                return;
+            }
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-size:12px;color:var(--text-muted);font-family:'DM Mono',monospace">${formatDate(item.timestamp)}</td>
+                    <td><span class="type-chip">${item.input_type}</span></td>
+                    <td style="font-weight:700;font-family:'Syne',sans-serif;color:${getRiskColor((item.risk_level || 'low'), 1)}">${item.risk_score}</td>
+                    <td><span class="badge ${item.risk_level}">${item.risk_level}</span></td>
+                    <td><span class="rbadge ${item.action}">${item.action}</span></td>
+                    <td style="font-size:12px;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(item.summary || '—')}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } catch {
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-row">Failed to load history.</td></tr>';
+        }
+    };
+
+    //  UI Helpers 
+    function setLoading(on) {
+        loader.classList.toggle('hidden', !on);
+        btnAnalyze.classList.toggle('loading', on);
+        btnText.textContent = on ? 'Analyzing...' : 'Run AI Analysis';
+    }
+
+    function showError(msg) {
+        alert('⚠️ ' + msg);
+    }
+
+    function getRiskColor(level, opacity = 1) {
+        const map = {
+            critical: `rgba(255,107,138,${opacity})`,
+            high: `rgba(255,163,72,${opacity})`,
+            medium: `rgba(252,211,77,${opacity})`,
+            low: `rgba(94,234,212,${opacity})`
+        };
+        return map[level] || map.low;
+    }
+
+    function getRiskIcon(level, action) {
+        if (action === 'blocked') return '🚫';
+        if (level === 'critical') return '🔴';
+        if (level === 'high') return '🟠';
+        if (level === 'medium') return '🟡';
+        return '🟢';
+    }
+
+    function getRiskTitle(level, action) {
+        if (action === 'blocked') return 'Content Blocked';
+        if (level === 'critical') return 'Critical Risk Detected';
+        if (level === 'high') return 'High Risk Detected';
+        if (level === 'medium') return 'Medium Risk Detected';
+        return 'Analysis Complete — Low Risk';
+    }
+
+    function getInsightClass(text) {
+        if (text.includes('🚨') || text.includes('💣') || text.includes('🔴') || text.includes('💳')) return 'danger';
+        if (text.includes('⚠️') || text.includes('🔐') || text.includes('🗝️') || text.includes('SQL')) return 'warn';
+        if (text.includes('SELECT') || text.includes('DROP') || text.includes('UNION')) return 'sql';
+        return '';
+    }
+
+    function isSqlType(type) {
+        return type && (type.startsWith('sql') || type === 'sql_injection' || type === 'sql_sensitive');
+    }
+
+    function isDangerType(type) {
+        return type && (type === 'password' || type === 'secret' || type === 'credit_card');
+    }
+
+    function riskRank(risk) {
+        return { critical: 4, high: 3, medium: 2, low: 1 }[risk] || 0;
+    }
+
+    function escHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function formatDate(ts) {
+        if (!ts) return '—';
+        try { return new Date(ts).toLocaleString(); } catch { return ts; }
+    }
+});
