@@ -86,7 +86,7 @@ const ScanResults = ({ result }) => {
                       <td className="py-3 px-4 text-white text-opacity-75 font-monospace">{f.line}</td>
                       <td className="py-3 px-4 text-white fw-medium">{f.type}</td>
                       <td className="py-3 px-4">
-                        <span className={`badge bg-${f.risk === 'HIGH' ? 'danger' : f.risk === 'MEDIUM' ? 'warning text-dark' : 'info'}`}>
+                        <span className={`badge bg-${f.risk === 'CRITICAL' || f.risk === 'HIGH' ? 'danger' : f.risk === 'MEDIUM' ? 'warning text-dark' : f.risk === 'LOW' ? 'success' : 'secondary'}`}>
                           {f.risk}
                         </span>
                       </td>
@@ -94,7 +94,7 @@ const ScanResults = ({ result }) => {
                     </tr>
                   )) : (
                     <tr>
-                      <td colSpan="4" className="text-center py-4 text-white text-opacity-50">No security findings detectd.</td>
+                      <td colSpan="4" className="text-center py-4 text-white text-opacity-50">No security findings detected.</td>
                     </tr>
                   )}
                 </tbody>

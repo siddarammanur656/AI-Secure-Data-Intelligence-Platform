@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import ScanInput from '../components/ScanInput';
 import ScanResults from '../components/ScanResults';
+import { API } from '../api';
 
 const Dashboard = () => {
   const [isScanning, setIsScanning] = useState(false);
@@ -22,7 +23,7 @@ const Dashboard = () => {
         formData.append('file', payload.file);
         formData.append('mask', payload.options.maskSensitive);
         formData.append('block_high_risk', payload.options.blockRisk);
-        response = await fetch('/upload', { method: 'POST', body: formData });
+        response = await fetch(API.UPLOAD, { method: 'POST', body: formData });
       } else {
         if (!payload.content) {
           alert('Please enter some content to analyze.');
@@ -38,7 +39,7 @@ const Dashboard = () => {
             log_analysis: payload.options.logAnalysis
           }
         };
-        response = await fetch('/analyze', {
+        response = await fetch(API.ANALYZE, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(bodyPayload)

@@ -10,7 +10,11 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("*")
+                .allowedOrigins(
+                    "http://localhost:5173",        // Vite dev server
+                    "http://localhost:3000",        // Alternative dev port
+                    "https://YOUR-APP.netlify.app"  // TODO: replace with your actual Netlify URL after deployment
+                )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*");
     }

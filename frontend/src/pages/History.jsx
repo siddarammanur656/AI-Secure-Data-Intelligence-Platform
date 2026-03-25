@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Card from '../components/Card';
 import { History as HistoryIcon, RefreshCw, Filter } from 'lucide-react';
+import { API } from '../api';
 
 const History = () => {
   const [historyDocs, setHistoryDocs] = useState([]);
@@ -9,7 +10,7 @@ const History = () => {
   const loadHistory = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/history');
+      const res = await fetch(API.HISTORY);
       if (!res.ok) {
         if (res.status === 504 || res.status === 502) {
           throw new Error('Cannot connect to Spring Boot backend. Is it running on port 8080?');
