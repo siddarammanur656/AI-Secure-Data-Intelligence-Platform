@@ -1,0 +1,11 @@
+target/
+.mvn/
+mvnw
+mvnw.cmd
+.git/
+.env
+.env.*
+node_modules/
+frontend/
+.idea/
+.vscode/

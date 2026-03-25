@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: secureai-backend
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: secureai-frontend
+    ports:
+      # Expose on 5173 to match Vite's default port, to keep URLs consistent and avoid CORS issues
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
