@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛡️ AI Secure Data Intelligence Platform
+# AI Secure Data Intelligence Platform
 
 ### *Intelligent AI Gateway · Real-Time Log Analyzer · Risk Engine for Sensitive Data*
 
@@ -9,206 +9,260 @@
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
 [![MongoDB](https://img.shields.io/badge/MongoDB_Atlas-Database-47A248?style=for-the-badge&logo=mongodb)](https://www.mongodb.com/atlas)
 [![Vite](https://img.shields.io/badge/Vite-Build_Tool-646CFF?style=for-the-badge&logo=vite)](https://vitejs.dev/)
-[![Deployed on Netlify](https://img.shields.io/badge/Frontend-Netlify-00C7B7?style=for-the-badge&logo=netlify)](https://securexai.netlify.app)
+[![Netlify](https://img.shields.io/badge/Frontend-Netlify-00C7B7?style=for-the-badge&logo=netlify)](https://securexai.netlify.app)
 
-**🌐 Live Demo → [securexai.netlify.app](https://securexai.netlify.app)**
+**Live Demo: [securexai.netlify.app](https://securexai.netlify.app)**
 
-> ⚡ Built for Hackathon — Original, end-to-end, production-deployed project
+*Built for Hackathon — Original, end-to-end, production-deployed project*
 
 </div>
 
 ---
 
-## 📌 Problem Statement
+## Problem Statement
 
-In modern software systems, sensitive data — API keys, passwords, credentials, PII, and secrets — leaks silently through log files, database dumps, code snippets, and text data. Developers and security teams lack a fast, unified tool to:
+In modern software systems, sensitive information such as API keys, passwords, personal data, and credentials leaks silently through log files, database dumps, code repositories, and raw text. Developers and security teams face three core challenges with no unified solution:
 
-- **Scan** logs and documents for sensitive information at runtime
-- **Classify** risks automatically without manual review
-- **Act** with enforcement policies (masking, blocking) before data reaches production
+- There are no automated tools fast enough to scan log data and text at runtime
+- Manual review is slow, inconsistent, and prone to human error
+- The consequences — data breaches, credential exposure, and compliance failures — are entirely avoidable
 
-The result: data breaches, credential leaks, and compliance violations that are entirely preventable.
+*SQL injection remains an active and widely exploited threat, yet most teams rely on fragmented tools that address only one problem at a time.*
 
----
-
-## 💡 Solution Overview
-
-**AI Secure Data Intelligence Platform** is an AI-powered security gateway that scans multiple input types — text, logs, SQL, files, and chat — in real-time. The platform:
-
-1. **Detects** sensitive data using a multi-layer pattern engine (Regex + AI Insights)
-2. **Classifies** every finding by risk level: `LOW → MEDIUM → HIGH → CRITICAL`
-3. **Enforces** configurable policies: mask sensitive values, or block high-risk content
-4. **Explains** findings with AI-generated insights like *"API key exposed in logs"*
-5. **Stores** all scan history in MongoDB for audit and compliance tracking
+This platform was built to close that gap.
 
 ---
 
-## ✨ Key Features
+## Solution Overview
 
-### 📁 Multi-Input Processing
-| Input Type | Formats Supported |
+The *AI Secure Data Intelligence Platform* is a security gateway that processes multiple input types — text, logs, SQL snippets, files, and chat content — in real-time. The pipeline is purpose-built to detect, classify, enforce, and explain security risks without requiring any external AI API.
+
+1. **Detect** — Scans input using a multi-layer detection engine combining regex patterns and a log-specific analyzer
+2. **Classify** — Assigns every finding a risk level: `LOW`, `MEDIUM`, `HIGH`, or `CRITICAL`
+3. **Enforce** — Applies configurable policies: mask sensitive values or block high-risk content outright
+4. **Explain** — Generates human-readable security insights such as *"API key exposed on line 12"*
+5. **Store** — Persists all scan results in MongoDB Atlas for audit trails and compliance review
+
+---
+
+## Key Features
+
+<div align="center">
+
+### Multi-Input Processing
+
+| Input Type | Supported Formats |
 |---|---|
-| Text / Logs | Free text, chat messages, log lines |
+| Text and Logs | Free text, chat messages, raw log lines |
 | File Upload | `.log`, `.txt`, `.pdf`, `.doc`, `.docx`, `.sql` |
-| SQL Snippets | Raw query input with injection detection |
+| SQL Snippets | Raw query input with injection pattern detection |
+| Live Chat | Inline text analysis without file upload |
 
-### 🔍 Sensitive Data Detection Engine
-Detects with line-level precision:
-- 🔑 **API Keys** — OpenAI (`sk-`), AWS (`AKIA`), GitHub (`ghp_`), Slack (`xoxb-`), and named keys (`OPENAI_API_KEY=...`)
-- 🔐 **Passwords & Secrets** — `password=`, `passwd=`, `client_secret=`
-- 📧 **PII** — Emails, phone numbers
-- 💳 **Credit Card Numbers**
-- 🪪 **JWT Tokens** & Bearer tokens
-- 🐛 **Stack Traces & Error Leaks**
-- 🧨 **Hardcoded Credentials**
+</div>
 
-### 📊 Log Analysis
-Specialized log file processing with:
-- Timestamp-aware parsing (no false positives on date/time values)
-- Detection of repeated failed login attempts
-- Identification of error and exception patterns
-- Log-level anomaly detection
 
-### 🛡️ SQL Injection Detection
+### Sensitive Data Detection
+
+The detection engine operates at line-level precision across all input types. It identifies:
+
+- **API Keys** — Named keys (`OPENAI_API_KEY`, `ACCESS_KEY`) and vendor prefixes: OpenAI (`sk-`), AWS (`AKIA`), GitHub (`ghp_`), Slack (`xoxb-`)
+- **Passwords and Secrets** — `password=`, `passwd=`, `client_secret=`, `private_key=`
+- **PII** — Email addresses, phone numbers (excluding timestamps and date values)
+- **Financial Data** — Credit card numbers matching standard formats
+- **Tokens** — JWT tokens, Bearer tokens, session tokens
+- **Infrastructure Leaks** — Stack traces, debug output, error messages with internal paths
+- **Hardcoded Credentials** — Secrets embedded directly in code or configuration files
+
+
+### Log File Analysis
+
+*Log files are uniquely difficult to scan because they mix structured timestamps, system events, and unstructured error output.* The platform handles this with a dedicated Log Analyzer module:
+
+- Line-by-line parsing with timestamp-aware detection (no false positives on date or time values)
+- Detection of repeated failed login attempts and authentication anomalies
+- Identification of stack traces and exception leaks
+- Log-level anomaly classification (DEBUG leaks, production error exposure)
+
+Log Risk Reference:
+
+| Pattern | Risk Level |
+|---|---|
+| API key found in log | High |
+| Password in log | Critical |
+| Email address in log | Low |
+| Stack trace or debug output | Medium |
+
+
+### SQL Injection Detection
+
+The engine scans SQL input for known injection signatures:
+
 - `UNION SELECT` injection attempts
-- Boolean injection (`OR 1=1`)
-- Stacked queries, DROP TABLE, TRUNCATE
-- Time-based blind injection (`SLEEP`, `BENCHMARK`)
+- Boolean injection (`OR 1=1`, `OR '1'='1'`)
+- Stacked query attacks using semicolons
+- `DROP TABLE`, `TRUNCATE`, and destructive DDL statements
+- Time-based blind injection (`SLEEP`, `BENCHMARK`, `WAITFOR DELAY`)
+- Sensitive but valid patterns: `SELECT *`, `DELETE FROM`, `INSERT INTO`, `GRANT` statements
 
-### 🤖 AI Insights Engine
-Generates human-readable security insights per scan:
-- *"Critical: API key found exposed in plain text on line 12"*
-- *"Multiple failed authentication attempts detected"*
-- *"SQL injection pattern UNION SELECT found in input"*
 
-### 📈 Risk Scoring & Policy Enforcement
-- Risk scores `0–100` calculated from findings
-- Risk levels: `LOW` / `MEDIUM` / `HIGH` / `CRITICAL`
-- **Mask Mode**: Redacts sensitive values in processed output
-- **Block Mode**: Rejects content that exceeds high-risk threshold
+### AI Insights Engine
 
----
+After each scan, the platform generates plain-language security explanations — no JSON parsing required to understand what was found:
 
-## 🏗️ Architecture & Processing Flow
+- *"Critical: API key exposed in plain text on line 12 — rotate immediately"*
+- *"Multiple failed authentication attempts detected — possible brute-force activity"*
+- *"SQL injection pattern UNION SELECT found — input rejected"*
+- *"Sensitive user data logged in plain text — review logging configuration"*
 
-```
-User Input (Text / File / SQL / Log)
-         │
-         ▼
-┌─────────────────────┐
-│   Validation Layer  │  ← Input type & content checks
-└────────┬────────────┘
-         │
-         ▼
-┌─────────────────────┐
-│  File Processing    │  ← Apache Tika extracts text from PDF/DOC/TXT
-│  Service            │
-└────────┬────────────┘
-         │
-         ▼
-┌────────────────────────────────────────┐
-│         Detection Engine               │
-│  ┌────────────┐  ┌──────────────────┐  │
-│  │ Regex      │  │  Log Analyzer    │  │
-│  │ Patterns   │  │  Service         │  │
-│  └────────────┘  └──────────────────┘  │
-└────────┬───────────────────────────────┘
-         │  Findings (type, risk, line, value)
-         ▼
-┌─────────────────────┐
-│   Risk Engine       │  ← Calculates risk score (0–100)
-└────────┬────────────┘
-         │
-         ▼
-┌─────────────────────┐
-│   Policy Engine     │  ← Applies mask / block actions
-└────────┬────────────┘
-         │
-         ▼
-┌─────────────────────┐
-│   Insight Engine    │  ← Generates AI-style human insights
-└────────┬────────────┘
-         │
-         ▼
-┌─────────────────────┐
-│   MongoDB Atlas     │  ← Persists scan result for audit history
-└────────┬────────────┘
-         │
-         ▼
-         JSON Response → React Frontend
-```
+
+### Risk Scoring and Policy Enforcement
+
+- Every scan produces a risk score from `0` to `100`, calculated from the severity and count of findings
+- Risk levels map to: `LOW (0–30)`, `MEDIUM (31–60)`, `HIGH (61–85)`, `CRITICAL (86–100)`
+- **Mask Mode** — Redacts sensitive values in the processed output while allowing the request through
+- **Block Mode** — Rejects input entirely when the risk score exceeds the high-risk threshold
 
 ---
 
-## 🧰 Tech Stack
+## Architecture and Processing Flow
+
+<div align="center">
+
+```
+User Input (Text / File / SQL / Log / Chat)
+         |
+         v
++----------------------+
+|   Validation Layer   |   Input type verification, size checks, format detection
++----------+-----------+
+           |
+           v
++----------------------+
+|  File Processing     |   Apache Tika extracts readable text from PDF, DOC, TXT
+|  Service             |
++----------+-----------+
+           |
+           v
++------------------------------------------+
+|          Detection Engine                |
+|   +-----------------+  +-------------+  |
+|   | Regex Patterns  |  | Log Analyzer|  |
+|   | (credentials,   |  | (timestamp- |  |
+|   |  SQL, PII)      |  |  aware)     |  |
+|   +-----------------+  +-------------+  |
++----------+-------------------------------+
+           |   Findings: type, risk, line, value, context
+           v
++----------------------+
+|    Risk Engine       |   Calculates composite risk score (0-100)
++----------+-----------+
+           |
+           v
++----------------------+
+|    Policy Engine     |   Applies mask or block based on configuration
++----------+-----------+
+           |
+           v
++----------------------+
+|    Insight Engine    |   Generates human-readable security explanations
++----------+-----------+
+           |
+           v
++----------------------+
+|    MongoDB Atlas     |   Persists full scan result for audit and history
++----------+-----------+
+           |
+           v
+     JSON Response  -->  React Frontend
+```
+
+</div>
+
+---
+
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
-| **Frontend** | React 18, Vite 5, Bootstrap 5, Lucide React |
-| **Backend** | Java 17, Spring Boot 3.2.4 |
-| **File Parsing** | Apache Tika 2.9.1 (PDF, DOC, TXT) |
-| **Database** | MongoDB Atlas (Spring Data MongoDB) |
-| **Detection** | Custom Regex Engine + Pattern-based AI Insights |
-| **Deployment** | Netlify (Frontend) + Render (Backend) |
-| **DevOps** | Docker, docker-compose |
+| Frontend | React 18, Vite 5, Bootstrap 5, Lucide React |
+| Backend | Java 17, Spring Boot 3.2.4 |
+| File Parsing | Apache Tika 2.9.1 |
+| Database | MongoDB Atlas (Spring Data MongoDB) |
+| Detection | Custom Regex Engine with Pattern-based Insight Generation |
+| Deployment | Netlify (Frontend), Render (Backend) |
+| DevOps | Docker, docker-compose |
 
 ---
 
-## 🚀 Installation & Setup
+## Installation and Setup
 
 ### Prerequisites
-- Java 17+
-- Node.js 16+
-- Maven 3.9+
-- MongoDB Atlas account (free tier works)
 
-### 1. Clone the Repository
+- Java 17 or higher
+- Node.js 16 or higher
+- Maven 3.9 or higher
+- A free MongoDB Atlas account
+
+### Step 1 — Clone the Repository
+
 ```bash
 git clone https://github.com/siddarammanur656/AI-Secure-Data-Intelligence-Platform.git
 cd AI-Secure-Data-Intelligence-Platform
 ```
 
-### 2. Configure Backend Environment
+### Step 2 — Configure the Backend
+
 Create a `.env` file in the project root:
+
 ```env
 MONGODB_URI=mongodb+srv://<user>:<password>@cluster0.xxxxx.mongodb.net/secureai_db?retryWrites=true&w=majority
 ```
 
-### 3. Run the Backend
+### Step 3 — Start the Backend
+
 ```bash
 mvn spring-boot:run
 ```
-> Backend starts at `http://localhost:8080`
 
-### 4. Configure Frontend Environment
+*Backend starts at `http://localhost:8080`*
+
+### Step 4 — Configure the Frontend
+
 ```bash
 cd frontend
 ```
+
 Create `frontend/.env`:
+
 ```env
 VITE_API_BASE_URL=
 ```
-> Leave empty to use Vite's dev proxy to `localhost:8080`
 
-### 5. Run the Frontend
+*Leave the value empty to use Vite's built-in proxy to `localhost:8080` during development.*
+
+### Step 5 — Start the Frontend
+
 ```bash
 npm install
 npm run dev
 ```
-> Frontend starts at `http://localhost:5173`
 
-### 6. Docker (Full Stack)
+*Frontend starts at `http://localhost:5173`*
+
+### Step 6 — Full Stack with Docker
+
 ```bash
-# From project root
 docker-compose up --build
 ```
 
 ---
 
-## 📡 API Usage
+## API Reference
 
 ### POST `/analyze` — Scan text or SQL
-**Request:**
+
+**Request**
+
 ```bash
 curl -X POST http://localhost:8080/analyze \
   -H "Content-Type: application/json" \
@@ -223,13 +277,14 @@ curl -X POST http://localhost:8080/analyze \
   }'
 ```
 
-**Response:**
+**Response**
+
 ```json
 {
   "risk_score": 85,
   "risk_level": "critical",
-  "action": "allowed",
-  "summary": "2 critical findings detected: API key and password exposed.",
+  "action": "masked",
+  "summary": "2 critical findings: API key and password exposed in plain text.",
   "findings": [
     {
       "type": "api_key",
@@ -246,13 +301,14 @@ curl -X POST http://localhost:8080/analyze \
     }
   ],
   "insights": [
-    "🚨 API key exposed — rotate immediately",
-    "💣 Hardcoded password detected — use environment variables"
+    "API key exposed — rotate immediately",
+    "Hardcoded password detected — use environment variables"
   ]
 }
 ```
 
 ### POST `/upload` — Scan a file
+
 ```bash
 curl -X POST http://localhost:8080/upload \
   -F "file=@/path/to/logfile.log" \
@@ -261,20 +317,22 @@ curl -X POST http://localhost:8080/upload \
 ```
 
 ### GET `/history` — Retrieve scan history
+
 ```bash
 curl http://localhost:8080/history
 ```
 
 ---
 
-## 🌐 Live Demo
+## Live Demo
 
-| | Link |
+| Resource | Link |
 |---|---|
-| 🌍 **Live Application** | [securexai.netlify.app](https://securexai.netlify.app) |
-| 📹 **Demo Video** | [Click](https://drive.google.com/drive/folders/1pxOoy5QCfbVO7VF2ePvelSaZu_DjaxKr?usp=sharing) |
+| Live Application | [securexai.netlify.app](https://securexai.netlify.app) |
+| Demo Video | [View Recording](https://drive.google.com/drive/folders/1pxOoy5QCfbVO7VF2ePvelSaZu_DjaxKr?usp=sharing) |
 
-**Try these test inputs on the live site:**
+*Test the live deployment using the following input:*
+
 ```
 OPENAI_API_KEY=sk-proj-abc123xyz789abcdef
 password=Admin@1234
@@ -283,81 +341,88 @@ SELECT * FROM users WHERE id=1 OR '1'='1'--
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
 ```
 AI-Secure-Data-Intelligence-Platform/
 ├── src/main/java/com/secureai/
-│   ├── controller/          # REST endpoints (Analyze, Upload, History)
+│   ├── controller/               REST endpoints (Analyze, Upload, History)
 │   ├── service/
-│   │   ├── DetectionEngine.java    # Core regex + pattern detection
-│   │   ├── LogAnalyzerService.java # Log-specific analysis
-│   │   ├── RiskEngine.java         # Risk scoring (0–100)
-│   │   ├── PolicyEngine.java       # Mask / Block enforcement
-│   │   ├── InsightEngine.java      # AI-style insight generation
-│   │   └── FileProcessingService.java  # Apache Tika file parsing
-│   ├── model/               # AnalysisRequest, AnalysisResult, Finding
-│   ├── repository/          # MongoDB data access
-│   └── config/              # CORS, MongoDB config
+│   │   ├── DetectionEngine.java       Core regex and pattern detection
+│   │   ├── LogAnalyzerService.java    Log-specific analysis module
+│   │   ├── RiskEngine.java            Risk score calculation (0-100)
+│   │   ├── PolicyEngine.java          Mask and block enforcement
+│   │   ├── InsightEngine.java         Human-readable insight generation
+│   │   └── FileProcessingService.java Apache Tika file parsing
+│   ├── model/                    AnalysisRequest, AnalysisResult, Finding
+│   ├── repository/               MongoDB data access layer
+│   └── config/                   CORS configuration, MongoDB setup
 ├── frontend/
 │   ├── src/
-│   │   ├── components/      # ScanInput, ScanResults, Card, Header, Sidebar
-│   │   ├── pages/           # Dashboard, History
-│   │   ├── api.js           # Centralized API config (reads env vars)
-│   │   └── styles/main.css  # Custom glassmorphism UI theme
-│   └── netlify.toml         # Netlify build config
-├── Dockerfile               # Backend Docker image
-├── docker-compose.yml       # Full-stack orchestration
-├── netlify.toml             # Netlify deployment config
-└── .env.example             # Environment variable template
+│   │   ├── components/           ScanInput, ScanResults, Card, Header, Sidebar
+│   │   ├── pages/                Dashboard, History
+│   │   ├── api.js                Centralized API configuration (reads env vars)
+│   │   └── styles/main.css       Glassmorphism UI theme with full responsiveness
+│   └── netlify.toml              Netlify build and routing configuration
+├── Dockerfile                    Backend Docker image (multi-stage, Java 17)
+├── docker-compose.yml            Full-stack service orchestration
+├── netlify.toml                  Root Netlify configuration
+└── .env.example                  Environment variable reference template
 ```
 
 ---
 
-## ⚡ Challenges Faced
+## Challenges Faced
 
-- **False Positives in Log Files**: Timestamps and date strings were incorrectly flagged as phone numbers. Solved using regex lookahead/lookbehind anchors to exclude timestamp contexts.
-- **API Key Pattern Coverage**: Initial regex only caught short prefixes. Rewrote to cover vendor-specific formats (OpenAI, AWS, GitHub, Slack) as well as generic named-key patterns.
-- **Bootstrap vs Custom CSS Conflicts**: Bootstrap's `.form-control` overrides text colors, causing invisible input text on dark backgrounds. Fixed by moving all visual properties to inline styles with guaranteed specificity.
-- **Spring Boot `.env` Loading**: `spring.config.import` with `optional:file:.env[.properties]` format correctly reads the env file without crashing when absent.
-- **CORS for Deployment**: Replaced wildcard `*` origin with explicit allowed origins list to support production Netlify URL.
+*Each challenge below was encountered during the hackathon build and resolved before deployment.*
 
----
+- **Log file false positives** — Timestamps and date values were incorrectly classified as phone numbers. Resolved by rewriting the phone number regex with negative lookahead and lookbehind anchors to exclude date/time contexts.
 
-## 🔮 Future Improvements
+- **API key pattern coverage** — The initial regex matched only a narrow set of short prefixes. The pattern was extended to cover vendor-specific formats (OpenAI `sk-`, AWS `AKIA`, GitHub `ghp_`, Slack `xoxb-`) and generic named assignments such as `OPENAI_API_KEY=`.
 
-- [ ] **GPT Integration** — Use OpenAI API to generate richer contextual explanations of findings
-- [ ] **YARA Rule Support** — Load custom threat detection rules dynamically
-- [ ] **Real-Time Streaming** — WebSocket-based live log monitoring
-- [ ] **Role-Based Dashboard** — Multi-user authentication and team collaboration
-- [ ] **CI/CD Pipeline** — GitHub Actions for automated test + deploy
-- [ ] **SIEM Integration** — Export findings to Splunk / Elasticsearch
+- **Bootstrap and CSS conflicts** — Bootstrap's `.form-control` applies a dark text color that overrides utility classes on dark backgrounds, making textarea text invisible. Resolved by replacing Bootstrap utility classes with explicit inline styles carrying full CSS specificity.
+
+- **Environment variable loading** — Spring Boot's `spring.config.import` with `optional:file:.env[.properties]` syntax correctly reads the `.env` file without throwing errors when the file is absent.
+
+- **CORS for production deployment** — The wildcard origin `*` was replaced with an explicit list of allowed origins to correctly support the production Netlify domain.
 
 ---
 
-## 🏆 Evaluation Alignment
+## Future Improvements
+
+- GPT integration for richer contextual explanations of each finding
+- YARA rule support to load and apply custom threat detection signatures dynamically
+- Real-time log streaming using WebSockets for live monitoring dashboards
+- Role-based access control with multi-user authentication and team collaboration
+- CI/CD pipeline with GitHub Actions for automated testing and deployment
+- SIEM integration to export findings to Splunk or Elasticsearch
+
+---
+
+## Evaluation Alignment
 
 | Criterion | How This Project Meets It |
 |---|---|
-| **Problem Solving** | Solves a real, measurable problem: sensitive data leakage through logs and code. Provides automated detection, risk scoring, and policy enforcement. |
-| **Innovation** | AI Gateway architecture combining regex detection, log-specific analysis, and insight generation in a unified pipeline — without requiring an external AI API. |
-| **Code Quality** | Clean layered Spring Boot architecture (Controller → Service → Repository), centralized API config on frontend, Docker support, environment-based config. |
-| **Domain Relevance** | Directly applicable to cybersecurity, DevSecOps, and compliance domains (GDPR, SOC 2). Addresses OWASP Top 10 categories including data exposure and injection. |
+| *Problem Solving* | Addresses a real and measurable security problem — sensitive data leakage through logs and code. Provides end-to-end detection, scoring, enforcement, and auditability. |
+| *Innovation* | Combines regex-based detection, a dedicated log analysis module, and a human-readable insight engine in a single unified pipeline without any external AI API dependency. |
+| *Code Quality* | Follows a clean layered Spring Boot architecture (Controller, Service, Repository). Frontend uses centralized API configuration, environment-based switching, and full Docker support. |
+| *Domain Relevance* | Directly applicable to cybersecurity, DevSecOps, and data compliance domains including GDPR and SOC 2. Addresses OWASP Top 10 categories for sensitive data exposure and injection attacks. |
 
 ---
 
-## 👤 Author
+## Author
 
-**Siddarammanur**
-- 🐙 GitHub: [@siddarammanur656](https://github.com/siddarammanur656)
-- 📧 Email: siddarammanur656@gmail.com
+**Siddarama Mallanna Manur**
+
+- GitHub: [github.com/siddarammanur656](https://github.com/siddarammanur656)
+- Email: siddarammanur656@gmail.com
 
 ---
 
 <div align="center">
 
-**Built with ❤️ for Hackathon | Original Project | Production Deployed**
+*Built for Hackathon — Original Project — Production Deployed*
 
-⭐ Star this repo if you found it useful!
+If this project was useful, consider leaving a star on the repository.
 
 </div>
