@@ -388,6 +388,28 @@ AI-Secure-Data-Intelligence-Platform/
 
 ---
 
+## Future Improvements
+
+- GPT integration for richer contextual explanations of each finding
+- YARA rule support to load and apply custom threat detection signatures dynamically
+- Real-time log streaming using WebSockets for live monitoring dashboards
+- Role-based access control with multi-user authentication and team collaboration
+- CI/CD pipeline with GitHub Actions for automated testing and deployment
+- SIEM integration to export findings to Splunk or Elasticsearch
+
+---
+
+## Evaluation Alignment
+
+| Criterion | How This Project Meets It |
+|---|---|
+| *Problem Solving* | Addresses a real and measurable security problem — sensitive data leakage through logs and code. Provides end-to-end detection, scoring, enforcement, and auditability. |
+| *Innovation* | Combines regex-based detection, a dedicated log analysis module, and a human-readable insight engine in a single unified pipeline without any external AI API dependency. |
+| *Code Quality* | Follows a clean layered Spring Boot architecture (Controller, Service, Repository). Frontend uses centralized API configuration, environment-based switching, and full Docker support. |
+| *Domain Relevance* | Directly applicable to cybersecurity, DevSecOps, and data compliance domains including GDPR and SOC 2. Addresses OWASP Top 10 categories for sensitive data exposure and injection attacks. |
+
+---
+
 ## Author
 
 **Siddarama Mallanna Manur**

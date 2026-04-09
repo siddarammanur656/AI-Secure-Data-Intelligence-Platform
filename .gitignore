@@ -51,3 +51,10 @@ dist-ssr/
 ### OS Files ###
 .DS_Store
 Thumbs.db
+
+# Ignore all PDF files
+*.pdf
+
+# Ignore all Word files
+*.doc
+*.docx
